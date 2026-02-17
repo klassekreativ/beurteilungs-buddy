@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beurteilungsbeitrag-Assistent</title>
+<style>
+:root {
+  --primary: #2c5282;
+  --primary-light: #ebf4ff;
+  --primary-dark: #1a365d;
+  --accent: #3182ce;
+  --accent-light: #bee3f8;
+  --bg: #f7fafc;
+  --card: #ffffff;
+  --text: #2d3748;
+  --text-light: #718096;
+  --border: #e2e8f0;
+  --success: #38a169;
+  --success-light: #c6f6d5;
+  --warning: #d69e2e;
+  --warning-light: #fefcbf;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+.app-header {
+  background: var(--primary);
+  color: #fff;
+  padding: 1rem 2rem;
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.app-header h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.app-header p {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-top: 0.15rem;
+}
+
+.progress-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 1rem 2rem;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.progress-step .step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.progress-step .step-label {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-left: 0.4rem;
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+
+.progress-step.active .step-circle {
+  background: var(--accent);
+  color: #fff;
+}
+
+.progress-step.active .step-label {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.progress-step.completed .step-circle {
+  background: var(--success);
+  color: #fff;
+}
+
+.progress-step.completed .step-label {
+  color: var(--success);
+}
+
+.progress-line {
+  width: 24px;
+  height: 2px;
+  background: var(--border);
+  flex-shrink: 0;
+  margin: 0 4px;
+}
+
+.progress-line.completed {
+  background: var(--success);
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.step-section {
+  display: none;
+}
+
+.step-section.active {
+  display: block;
+}
+
+.step-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 0.25rem;
+}
+
+.step-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.card-hint {
+  font-size: 0.82rem;
+  color: var(--text-light);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+label.form-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+  color: var(--text);
+}
+
+input[type="text"], input[type="date"], select, textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text);
+  background: #fff;
+  transition: border-color 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(49,130,206,0.15);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .form-row { grid-template-columns: 1fr; }
+}
+
+.rating-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.rating-option {
+  display: flex;
+  align-items: flex-start;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 0.75rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rating-option:hover {
+  border-color: var(--accent-light);
+  background: var(--primary-light);
+}
+
+.rating-option.selected {
+  border-color: var(--accent);
+  background: var(--primary-light);
+}
+
+.rating-option input[type="radio"] {
+  margin-top: 0.2rem;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.rating-option .option-text {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.rating-option .option-label {
+  font-weight: 600;
+  display: block;
+}
+
+.rating-option .option-desc {
+  font-size: 0.82rem;
+  color: var(--text-light);
+}
+
+.overall-rating {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 500px) {
+  .overall-rating { grid-template-columns: 1fr; }
+}
+
+.overall-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.overall-option:hover {
+  border-color: var(--accent-light);
+  background: var(--primary-light);
+}
+
+.overall-option.selected {
+  border-color: var(--accent);
+  background: var(--primary-light);
+}
+
+.btn-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.65rem 1.5rem;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--primary); }
+.btn-secondary { background: var(--border); color: var(--text); }
+.btn-secondary:hover { background: #cbd5e0; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { background: #2f855a; }
+
+.lg-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.lg-table th, .lg-table td {
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.lg-table th { background: var(--primary-light); font-weight: 600; }
+.lg-table input { border: none; padding: 0.3rem; font-size: 0.9rem; width: 100%; }
+
+.result-block {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.result-header {
+  background: var(--primary-light);
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: var(--primary-dark);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.result-body {
+  padding: 1rem;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.copy-btn {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.copy-btn.copied { background: var(--success); }
+
+.export-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem; }
+
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--primary-dark);
+  color: #fff;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@media print {
+  .app-header, .progress-bar, .btn-row, .export-row, .copy-btn, .no-print { display: none !important; }
+  .container { max-width: 100%; padding: 0; }
+  .step-section { display: block !important; }
+  .result-block { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem">
+    <div>
+      <h1>Beurteilungsbeitrag-Assistent</h1>
+      <p>Strukturierte Erstellung gem. &sect; 16 (2) OVP NRW</p>
+    </div>
+    <div style="text-align:right;font-size:0.75rem;opacity:0.75;line-height:1.4">
+      Autorin: Alicja Gulcz &middot; mit Gemini 3 Flash (2026)
+    </div>
+  </div>
+</header>
+
+<div style="background:#e6f6e6;border-bottom:1px solid #b2d8b2;padding:0.6rem 2rem;font-size:0.82rem;color:#276749;display:flex;align-items:center;gap:0.5rem">
+  <span style="font-size:1.1rem">&#x1f512;</span>
+  <span>Lokale Verarbeitung: Alle Daten bleiben auf Ihrem Ger&auml;t.</span>
+</div>
+
+<nav class="progress-bar" id="progressBar"></nav>
+
+<main class="container">
+  <section class="step-section active" id="step0">
+    <h2 class="step-title">Metadaten erfassen</h2>
+    <p class="step-subtitle">Allgemeine Angaben zum Zeitraum und zur Person.</p>
+    <div class="card">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="metaGeschlecht">Geschlecht *</label>
+          <select id="metaGeschlecht">
+            <option value="">Bitte w&auml;hlen</option>
+            <option value="w">weiblich (Frau)</option>
+            <option value="m">m&auml;nnlich (Herr)</option>
+            <option value="d">divers</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="metaNachname">Nachname der/des LAA *</label>
+          <input type="text" id="metaNachname" placeholder="z.B. M&uuml;ller">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="metaVorname">Vorname (optional)</label>
+        <input type="text" id="metaVorname" placeholder="z.B. Max">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="metaLehramt">Lehramt *</label>
+          <select id="metaLehramt">
+            <option value="">Bitte w&auml;hlen</option>
+            <option value="GyGe">GyGe</option>
+            <option value="HRSGe">HRSGe</option>
+            <option value="GS">Grundschule</option>
+            <option value="BK">Berufskolleg</option>
+            <option value="SP">Sonderp&auml;dagogik</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="metaFach">Fach/F&auml;cher *</label>
+          <input type="text" id="metaFach" placeholder="z.B. Deutsch">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="metaSchule">Ausbildungsschule *</label>
+        <input type="text" id="metaSchule">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="metaVon">Von *</label>
+          <input type="date" id="metaVon">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="metaBis">Bis *</label>
+          <input type="date" id="metaBis">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="metaAbschnitt">Abschnitt *</label>
+        <select id="metaAbschnitt">
+          <option value="">W&auml;hlen...</option>
+          <option value="1">1. Abschnitt</option>
+          <option value="2">2. Abschnitt</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="metaBeurteiler">Beurteiler*in *</label>
+        <input type="text" id="metaBeurteiler">
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Lerngruppen</h3>
+      <table class="lg-table" id="lgTable">
+        <thead><tr><th>Zeitraum</th><th>Klasse</th><th>Thema</th><th style="width:40px"></th></tr></thead>
+        <tbody>
+          <tr>
+            <td><input type="text" class="lg-zeitraum"></td>
+            <td><input type="text" class="lg-klasse"></td>
+            <td><input type="text" class="lg-thema"></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn btn-secondary" style="margin-top:0.5rem; padding: 0.4rem 0.8rem;" onclick="addLerngruppe()">+ Hinzuf&uuml;gen</button>
+    </div>
+    <div class="btn-row"><span></span><button class="btn btn-primary" onclick="goToStep(1)">Weiter &rarr;</button></div>
+  </section>
+
+  <section class="step-section" id="step1"></section>
+  <section class="step-section" id="step2"></section>
+  <section class="step-section" id="step3"></section>
+  <section class="step-section" id="step4"></section>
+  <section class="step-section" id="step5"></section>
+
+  <section class="step-section" id="step6">
+    <h2 class="step-title">Ergebnis &amp; Export</h2>
+    <div class="export-row no-print">
+      <button class="btn btn-primary" onclick="copyAll()">Alles kopieren</button>
+      <button class="btn btn-success" onclick="copyKIPrompt(false)">KI-Prompt</button>
+      <button class="btn btn-success" style="background:#805ad5" onclick="copyKIPrompt(true)">KI-Prompt (anonym)</button>
+      <button class="btn btn-secondary" onclick="window.print()">Drucken</button>
+    </div>
+    <div id="resultContainer"></div>
+    <div class="btn-row no-print">
+      <button class="btn btn-secondary" onclick="goToStep(5)">&larr; Zur&uuml;ck</button>
+      <span></span>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// UNIVERSAL COPY FUNCTION (Works on iPad local & HTTPS)
+function copyToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
+  } else {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    return new Promise((res, rej) => {
+      document.execCommand('copy') ? res() : rej();
+      document.body.removeChild(textArea);
+    });
+  }
+}
+
+const HF_DATA = [
+  { id: 'U', title: 'HF U \u2013 Unterricht', shortTitle: 'HF U', label: 'Unterricht', kompetenzen: 'Planung & Durchf\u00fchrung',
+    questions: [
+      { id: 'u1', text: 'Planung & Struktur?', hint: 'Roter Faden, Ziele, Methoden.', options: [
+        { value: 4, label: 'Sehr \u00fcberzeugend', desc: 'Hervorragend strukturiert.' },
+        { value: 3, label: '\u00dcberzeugend', desc: 'Fachlich korrekt.' },
+        { value: 2, label: 'Solide', desc: 'Weitgehend nachvollziehbar.' },
+        { value: 1, label: 'Entwicklungsbed\u00fcrftig', desc: 'L\u00fcckenhaft.' }
+      ]}
+    ]
+  },
+  { id: 'E', title: 'HF E \u2013 Erziehung', shortTitle: 'HF E', label: 'Erziehung', kompetenzen: 'Werte & Classroom Mgmt',
+    questions: [
+      { id: 'e1', text: 'St\u00f6rungsmanagement?', hint: 'Pr\u00e4vention & Reaktion.', options: [
+        { value: 4, label: 'Souver\u00e4n', desc: 'Hervorragendes Management.' },
+        { value: 3, label: 'Angemessen', desc: 'Reagiert zeitnah.' },
+        { value: 2, label: 'In Entwicklung', desc: 'Nicht immer konsequent.' },
+        { value: 1, label: 'Schwierig', desc: 'Kaum Durchsetzung.' }
+      ]}
+    ]
+  },
+  { id: 'L', title: 'HF L \u2013 Leistung', shortTitle: 'HF L', label: 'Leistung', kompetenzen: 'Diagnostik & Beurteilung',
+    questions: [
+      { id: 'l1', text: 'Transparenz?', hint: 'Bewertungsma\u00dfst\u00e4be.', options: [
+        { value: 4, label: 'Vorbildlich', desc: 'Kriteriengeleitet & offen.' },
+        { value: 3, label: 'Gut', desc: 'Nachvollziehbar.' },
+        { value: 2, label: 'Basis', desc: 'Teilweise transparent.' },
+        { value: 1, label: 'Gering', desc: 'Wenig Kriterien.' }
+      ]}
+    ]
+  },
+  { id: 'B', title: 'HF B \u2013 Beratung', shortTitle: 'HF B', label: 'Beratung', kompetenzen: 'Eltern & Sch\u00fcler',
+    questions: [
+      { id: 'b1', text: 'Beratungsanl\u00e4sse?', hint: 'Erkennung & Nutzung.', options: [
+        { value: 4, label: 'Pr\u00e4ventiv', desc: 'Erkennt Bedarfe fr\u00fch.' },
+        { value: 3, label: 'Zuverl\u00e4ssig', desc: 'Signalisiert Bereitschaft.' },
+        { value: 2, label: 'Reaktiv', desc: 'Nur auf Anfrage.' },
+        { value: 1, label: 'Selten', desc: 'Kaum Beratung.' }
+      ]}
+    ]
+  },
+  { id: 'S', title: 'HF S \u2013 System Schule', shortTitle: 'HF S', label: 'System', kompetenzen: 'Gremien & Kooperation',
+    questions: [
+      { id: 's1', text: 'Zusammenarbeit?', hint: 'Kollegiale Kooperation.', options: [
+        { value: 4, label: 'Initiativ', desc: 'Bereicherung f\u00fcr das Team.' },
+        { value: 3, label: 'Konstruktiv', desc: 'Gute Absprachen.' },
+        { value: 2, label: 'Passiv', desc: 'Erf\u00fcllt Aufgaben.' },
+        { value: 1, label: 'Isoliert', desc: 'Kaum Austausch.' }
+      ]}
+    ]
+  }
+];
+
+let currentStep = 0;
+const answers = {};
+
+function getMeta() {
+  return {
+    geschlecht: document.getElementById('metaGeschlecht').value,
+    nachname: document.getElementById('metaNachname').value.trim(),
+    vorname: document.getElementById('metaVorname').value.trim(),
+    lehramt: document.getElementById('metaLehramt').value,
+    fach: document.getElementById('metaFach').value.trim(),
+    schule: document.getElementById('metaSchule').value.trim(),
+    von: document.getElementById('metaVon').value,
+    bis: document.getElementById('metaBis').value,
+    abschnitt: document.getElementById('metaAbschnitt').value,
+    beurteiler: document.getElementById('metaBeurteiler').value.trim()
+  };
+}
+
+function getAnrede(meta) {
+  if (meta.geschlecht === 'w') return 'Frau ' + meta.nachname;
+  if (meta.geschlecht === 'm') return 'Herr ' + meta.nachname;
+  return meta.nachname;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function addLerngruppe() {
+  const tbody = document.querySelector('#lgTable tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="text" class="lg-zeitraum"></td><td><input type="text" class="lg-klasse"></td><td><input type="text" class="lg-thema"></td><td><button class="btn btn-secondary" style="padding:2px 8px" onclick="this.closest('tr').remove()">\u00d7</button></td>`;
+  tbody.appendChild(tr);
+}
+
+function renderProgressBar() {
+  const labels = ['Start', 'HF U', 'HF E', 'HF L', 'HF B', 'HF S', 'Ende'];
+  const bar = document.getElementById('progressBar');
+  bar.innerHTML = '';
+  labels.forEach((l, i) => {
+    if (i > 0) bar.innerHTML += `<div class="progress-line ${i <= currentStep ? 'completed' : ''}"></div>`;
+    bar.innerHTML += `<div class="progress-step ${i === currentStep ? 'active' : ''} ${i < currentStep ? 'completed' : ''}" onclick="goToStep(${i})"><div class="step-circle">${i < currentStep ? '\u2713' : i}</div><span class="step-label">${l}</span></div>`;
+  });
+}
+
+function renderHFStep(idx) {
+  const hf = HF_DATA[idx];
+  const stepNum = idx + 1;
+  const section = document.getElementById('step' + stepNum);
+  let html = `<h2 class="step-title">${hf.title}</h2><p class="step-subtitle">${hf.kompetenzen}</p>`;
+  hf.questions.forEach(q => {
+    html += `<div class="card"><h3 class="card-title">${q.text}</h3><p class="card-hint">${q.hint}</p><div class="rating-options">`;
+    q.options.forEach(o => {
+      const isSel = answers[q.id] === o.value;
+      html += `<label class="rating-option ${isSel ? 'selected' : ''}" onclick="selectOption(this, '${q.id}', ${o.value})"><input type="radio" name="${q.id}" ${isSel ? 'checked' : ''}> <div class="option-text"><span class="option-label">${o.label}</span><span class="option-desc">${o.desc}</span></div></label>`;
+    });
+    html += `</div></div>`;
+  });
+  html += `<div class="card"><h3 class="card-title">Notizen</h3><textarea id="freetext_${hf.id}" placeholder="Besonderheiten...">${answers['freetext_' + hf.id] || ''}</textarea></div>`;
+  html += `<div class="btn-row"><button class="btn btn-secondary" onclick="goToStep(${stepNum-1})">&larr; Zur\u00fcck</button><button class="btn btn-primary" onclick="goToStep(${stepNum+1})">Weiter &rarr;</button></div>`;
+  section.innerHTML = html;
+}
+
+function selectOption(el, qid, val) {
+  el.closest('.rating-options').querySelectorAll('.rating-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[qid] = val;
+}
+
+function goToStep(s) {
+  if (s > currentStep && currentStep === 0) {
+    const m = getMeta();
+    if (!m.nachname || !m.lehramt) return showToast('Bitte Pflichtfelder ausf\u00fcllen.');
+  }
+  if (currentStep >= 1 && currentStep <= 5) {
+    const ta = document.getElementById('freetext_' + HF_DATA[currentStep-1].id);
+    if (ta) answers['freetext_' + HF_DATA[currentStep-1].id] = ta.value;
+  }
+  currentStep = s;
+  if (s >= 1 && s <= 5) renderHFStep(s-1);
+  if (s === 6) generateResults();
+  document.querySelectorAll('.step-section').forEach((sec, i) => sec.classList.toggle('active', i === s));
+  renderProgressBar();
+  window.scrollTo(0,0);
+}
+
+function generateResults() {
+  const meta = getMeta();
+  const anrede = getAnrede(meta);
+  let html = '';
+  HF_DATA.forEach(hf => {
+    const ft = answers['freetext_'+hf.id] || '';
+    const text = `${anrede} zeigt im Bereich ${hf.label} eine kompetente Entwicklung. ${ft}`;
+    html += `<div class="result-block"><div class="result-header"><span>${hf.title}</span><button class="copy-btn" onclick="copyBlock(this, '${text.replace(/'/g, "\\'")}')">Kopieren</button></div><div class="result-body">${text}</div></div>`;
+  });
+  document.getElementById('resultContainer').innerHTML = html;
+}
+
+function copyBlock(btn, txt) {
+  copyToClipboard(txt).then(() => {
+    btn.textContent = 'Kopiert!';
+    setTimeout(() => btn.textContent = 'Kopieren', 2000);
+  });
+}
+
+function copyAll() {
+  const txt = Array.from(document.querySelectorAll('.result-body')).map(b => b.innerText).join('\n\n');
+  copyToClipboard(txt).then(() => showToast('Alles kopiert!'));
+}
+
+function copyKIPrompt(anon) {
+  const meta = getMeta();
+  const name = anon ? 'LAA' : getAnrede(meta);
+  let p = `Erstelle einen Beurteilungsbeitrag f\u00fcr ${name}.\nLehramt: ${meta.lehramt}\nF\u00e4cher: ${meta.fach}\n`;
+  HF_DATA.forEach(hf => { p += `\n- ${hf.label}: ${answers['freetext_'+hf.id] || 'Keine Notizen'}`; });
+  copyToClipboard(p).then(() => showToast('KI-Prompt kopiert!'));
+}
+
+renderProgressBar();
+</script>
+</body>
+</html>
