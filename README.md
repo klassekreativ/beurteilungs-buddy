@@ -20,7 +20,7 @@ Dieses Tool wurde mit Fokus auf Datensparsamkeit entwickelt:
 ## 🛠 Nutzung
 
 Du kannst das Tool direkt über GitHub Pages nutzen:
-**[DEIN GITHUB-PAGES LINK HIER EINFÜGEN]**
+**https://klassekreativ.github.io/beurteilungs-buddy/**
 
 Alternativ kann die `index.html` heruntergeladen und lokal auf jedem Rechner mit einem modernen Browser geöffnet werden.
 
